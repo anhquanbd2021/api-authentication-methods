@@ -1,0 +1,16 @@
+{
+  "name": "api-authentication-methods-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "API Auth Lab — prove all six API authentication methods hands-on: decode Basic, leak an API key, tamper a JWT, replay an HMAC webhook, walk OAuth and mTLS.",
+  "scripts": {
+    "start": "node app/server.js",
+    "prove": "node scripts/prove.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "check": "npm test && npm run prove"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

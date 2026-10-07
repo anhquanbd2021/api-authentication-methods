@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="API Auth Lab — hands-on proof of all six API authentication methods: API key, Basic, JWT, OAuth 2.0, HMAC, mTLS.">
+  <title>API Auth Lab — 6 authentication methods, hands-on</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+<!-- pb-shell --><link rel="stylesheet" href="./pb-shell.css"><!-- pb-shell --><!-- pb-back --><link rel="stylesheet" href="./pb-back.css"><!-- pb-back --></head>
+<body>
+<a class="skip-link" href="#headers">Skip to the labs</a>
+<main>
+  <nav aria-label="Primary"><a aria-current="page" href="/">Lab</a><a href="/guide.html">Guide</a><a href="https://github.com/anhquanbd2021/api-authentication-methods">Source</a></nav>
+  <header class="hero">
+    <div><p class="eyebrow">API Auth Lab · six methods, six proofs</p><h1>Who is calling, and what do they need to prove?</h1><p class="lede">Every API auth method answers a slightly different question. Run each one below — decode the credentials, tamper the token, replay the webhook — and watch exactly where it holds and where it fails.</p></div>
+    <p class="warning"><strong>Safe educational demo.</strong> All secrets are fixtures, all crypto runs in your browser — nothing is sent anywhere.</p>
+  </header>
+
+  <section class="method-map" aria-label="Method map">
+    <article><h3>API Key</h3><p>Which partner server is this?</p></article>
+    <article><h3>Basic Auth</h3><p>Throwaway internal tool?</p></article>
+    <article><h3>JWT</h3><p>Which user is this?</p></article>
+    <article><h3>OAuth 2.0</h3><p>May this app act for a user?</p></article>
+    <article><h3>HMAC</h3><p>Is this message authentic and fresh?</p></article>
+    <article><h3>mTLS</h3><p>Is this service part of our network?</p></article>
+  </section>
+
+  <section class="workspace" id="headers" aria-label="Header lab">
+    <section class="panel controls" aria-labelledby="header-title">
+      <div><p class="eyebrow">Lab 1 · API key + Basic</p><h2 id="header-title">Credentials ride the header</h2></div>
+      <label for="basic-user">Username<input id="basic-user" value="alice" spellcheck="false"></label>
+      <label for="basic-pass">Password<input id="basic-pass" value="s3cret!" spellcheck="false"></label>
+      <button id="basic-build" type="button">Build the Authorization header</button>
+      <div class="row"><button id="key-issue" type="button">Issue API key to partner-a</button><button id="key-rotate" type="button" disabled>Rotate leaked key</button></div>
+    </section>
+    <section class="panel" aria-labelledby="wire-title">
+      <div class="section-heading"><div><p class="eyebrow">On the wire</p><h2 id="wire-title">What the server receives</h2></div><span id="header-verdict" class="badge" role="status" aria-live="polite">Ready</span></div>
+      <pre id="wire" class="wire">—</pre>
+      <p class="eyebrow danger-text">Anyone reading the header sees</p>
+      <pre id="decoded" class="wire">—</pre>
+      <p id="key-status" class="muted"></p>
+    </section>
+  </section>
+
+  <section class="workspace" aria-label="JWT lab">
+    <section class="panel controls" aria-labelledby="jwt-title">
+      <div><p class="eyebrow">Lab 2 · JWT</p><h2 id="jwt-title">Signed, not secret</h2></div>
+      <label for="jwt-payload">Payload<textarea id="jwt-payload" rows="5" spellcheck="false">{"sub":"u-7","role":"user","exp":9999999999}</textarea></label>
+      <div class="row"><button id="jwt-issue" type="button">Issue token</button><button id="jwt-tamper" type="button" disabled>Tamper: role → admin</button><button id="jwt-resign" type="button" disabled>Re-sign with real secret</button></div>
+    </section>
+    <section class="panel" aria-labelledby="jwt-out-title">
+      <div class="section-heading"><div><p class="eyebrow">Verifier</p><h2 id="jwt-out-title">Signature check</h2></div><span id="jwt-verdict" class="badge" role="status" aria-live="polite">Ready</span></div>
+      <pre id="jwt-token" class="wire token">—</pre>
+      <pre id="jwt-decoded" class="wire">—</pre>
+    </section>
+  </section>
+
+  <section class="workspace" aria-label="Webhook lab">
+    <section class="panel controls" aria-labelledby="wh-title">
+      <div><p class="eyebrow">Lab 3 · HMAC webhook</p><h2 id="wh-title">Integrity <em>and</em> freshness</h2></div>
+      <label for="wh-body">Payload<textarea id="wh-body" rows="3" spellcheck="false">{"event":"payment.succeeded","amount":4200}</textarea></label>
+      <div class="row"><button id="wh-sign" type="button">Sign &amp; deliver</button><button id="wh-tamper" type="button" disabled>Tamper amount → 99900</button><button id="wh-replay" type="button" disabled>Replay 1 hour later</button></div>
+    </section>
+    <section class="panel" aria-labelledby="wh-out-title">
+      <div class="section-heading"><div><p class="eyebrow">Receiver</p><h2 id="wh-out-title">Signature + timestamp check</h2></div><span id="wh-verdict" class="badge" role="status" aria-live="polite">Ready</span></div>
+      <pre id="wh-out" class="wire">—</pre>
+    </section>
+  </section>
+
+  <section class="workspace" aria-label="Protocol walkthroughs">
+    <section class="panel" aria-labelledby="oauth-title">
+      <div class="section-heading"><div><p class="eyebrow">Lab 4 · OAuth 2.0</p><h2 id="oauth-title">The password never reaches the app</h2></div></div>
+      <ol id="oauth-steps" class="steps" aria-label="Authorization code flow"></ol>
+      <div class="row"><button id="oauth-prev" type="button">← Back</button><button id="oauth-next" type="button">Next step →</button></div>
+      <p id="oauth-detail" class="muted"></p>
+    </section>
+    <section class="panel" aria-labelledby="mtls-title">
+      <div class="section-heading"><div><p class="eyebrow">Lab 5 · mTLS</p><h2 id="mtls-title">Both sides show papers</h2></div></div>
+      <label class="row"><input type="checkbox" id="mtls-rogue"> client presents a certificate from an untrusted CA</label>
+      <ol id="mtls-steps" class="steps" aria-label="Mutual TLS handshake"></ol>
+      <div class="row"><button id="mtls-run" type="button">Run handshake</button></div>
+      <p id="mtls-detail" class="muted"></p>
+    </section>
+  </section>
+
+  <p><a href="/guide.html">Read the method guide</a> · <a href="https://github.com/anhquanbd2021/api-authentication-methods">Inspect source and tests</a></p>
+</main>
+<script type="module" src="/app.js"></script>
+<!-- pb-shell --><a class="pb-shell" href="https://github.com/anhquanbd2021/api-authentication-methods" title="api-authentication-methods — an Article Playbook demo (view source)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2" fill="#2dd4bf"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#2dd4bf" opacity=".45"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#2dd4bf" opacity=".45"/><rect x="13" y="13" width="9" height="9" rx="4.5" fill="#2dd4bf"/></svg><b>api-authentication-methods</b><i>DEMO</i></a><!-- pb-shell --><!-- pb-back --><a class="pb-back" id="pb-back" href="https://github.com/anhquanbd2021/api-authentication-methods" title="Back to the article — api-authentication-methods">← Article <i>PLAYBOOK</i></a><script>(function(){var a=document.getElementById('pb-back');if(!a)return;var h=location.hostname;if(/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(h)){a.href='//'+h+':'+(/^(localhost|127\.0\.0\.1)$/.test(h)?'1234':'30082')+'/microsites/article.html?slug=api-authentication-methods';}})();</script><!-- pb-back --></body>
+</html>

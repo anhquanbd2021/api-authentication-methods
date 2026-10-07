@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Guide to the API Auth Lab — what each of the six methods proves, where it fails, and when to use it.">
+  <title>API Auth Lab Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+<!-- pb-shell --><link rel="stylesheet" href="./pb-shell.css"><!-- pb-shell --><!-- pb-back --><link rel="stylesheet" href="./pb-back.css"><!-- pb-back --></head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<main id="main">
+  <nav aria-label="Primary"><a href="/">Lab</a><a aria-current="page" href="/guide.html">Guide</a><a href="https://github.com/anhquanbd2021/api-authentication-methods">Source</a></nav>
+  <header class="hero">
+    <div><p class="eyebrow">Method guide</p><h1>Six methods, six different questions</h1><p class="lede">Every authentication method answers a slightly different question about the caller. This page maps each one to what it proves, how it fails, and when to reach for it.</p></div>
+    <p class="warning"><strong>Fixture secrets only.</strong> The lab uses a shared demo secret and fake credentials so you can watch verification succeed and fail — none of it leaves your browser.</p>
+  </header>
+
+  <section class="guide-section"><p class="eyebrow">Header credentials</p><h2>Sent with every request</h2><div class="control-grid">
+    <article class="panel control"><span class="control-number">Method 01</span><h3>API Key</h3><p>A bearer string identifying a client — anyone holding it <em>is</em> the client. No expiry, no scoping unless you build them.</p><dl><dt>Proves</dt><dd>Which partner is calling.</dd><dt>Fails when</dt><dd>Leaked — it works for anyone until rotated. Lab 1 rotates a leaked key live.</dd><dt>Use for</dt><dd>Server-to-server calls, public APIs, third-party integrations.</dd></dl></article>
+    <article class="panel control"><span class="control-number">Method 02</span><h3>Basic Auth</h3><p><code>user:pass</code> Base64-encoded in every request — an encoding, not a cipher.</p><dl><dt>Proves</dt><dd>Username + password, re-sent constantly.</dd><dt>Fails when</dt><dd>Any log, proxy, or capture decodes the password. HTTPS only, user-facing never.</dd><dt>Use for</dt><dd>Quick internal tooling, prototypes.</dd></dl></article>
+  </div></section>
+
+  <section class="guide-section"><p class="eyebrow">Tokens and delegation</p><h2>Issued once, presented many times</h2><div class="control-grid">
+    <article class="panel control"><span class="control-number">Method 03</span><h3>JWT</h3><p>A signed payload the server verifies without a session lookup — stateless auth.</p><dl><dt>Proves</dt><dd>Who the user is and what they may do — if the signature holds.</dd><dt>Fails when</dt><dd>Payload is readable by anyone (secrets leak); stolen tokens work until expiry. Lab 2 tampers a claim and loses the signature check.</dd><dt>Use for</dt><dd>User auth, stateless microservices, mobile apps.</dd></dl></article>
+    <article class="panel control"><span class="control-number">Method 04</span><h3>OAuth 2.0</h3><p>Delegation, not login — an app gets a scoped token; the user's password stays at the provider.</p><dl><dt>Proves</dt><dd>The user consented to a scope for this app.</dd><dt>Fails when</dt><dd>Tokens leak via browser URLs, or scopes grant more than needed. Lab 4 steps the code flow.</dd><dt>Use for</dt><dd>Third-party integrations, social login, delegated access.</dd></dl></article>
+  </div></section>
+
+  <section class="guide-section"><p class="eyebrow">Proof at the edges</p><h2>Message integrity and machine identity</h2><div class="control-grid">
+    <article class="panel control"><span class="control-number">Method 05</span><h3>HMAC</h3><p>A signature computed over <code>timestamp + body</code> with a shared secret — integrity and freshness together.</p><dl><dt>Proves</dt><dd>The body is untampered and the sender knows the secret.</dd><dt>Fails when</dt><dd>No freshness window — a captured request replays verbatim. Lab 3 replays an hour-old delivery.</dd><dt>Use for</dt><dd>Webhooks, signed requests, financial APIs.</dd></dl></article>
+    <article class="panel control"><span class="control-number">Method 06</span><h3>mTLS</h3><p>Both sides present certificates; the handshake fails if either chain is untrusted.</p><dl><dt>Proves</dt><dd>Cryptographic identity for both caller and server — before any data moves.</dd><dt>Fails when</dt><dd>Cert expiry causes self-inflicted outages; issuance needs real PKI. Lab 5 runs the handshake with a rogue CA.</dd><dt>Use for</dt><dd>Service mesh, zero-trust, financial infrastructure.</dd></dl></article>
+  </div></section>
+
+  <section class="guide-section"><p class="eyebrow">Architecture</p><h2>How the demo is built</h2><div class="table-wrap panel"><table><thead><tr><th>Layer</th><th>Behavior</th><th>Evidence</th></tr></thead><tbody><tr><td>Crypto core</td><td>Pure-JS SHA-256, HMAC, base64url, and HS256 JWT sign/verify — no dependencies, runs identically in browser and tests.</td><td><code>public/crypto.mjs</code></td></tr><tr><td>Method engines</td><td>API-key registry with rotation, Basic build/decode/verify, webhook HMAC sign/verify with freshness window and nonce replay store.</td><td><code>public/methods.mjs</code></td></tr><tr><td>Flow models</td><td>Step models for the OAuth 2.0 authorization-code flow and the mutual-TLS handshake.</td><td><code>public/flows.mjs</code></td></tr><tr><td>Server</td><td>Zero-dependency static host plus /health and /version. No API calls — every check runs client-side.</td><td><code>app/server.js</code></td></tr></tbody></table></div></section>
+
+  <section class="guide-section"><p class="eyebrow">Run locally</p><h2>Inspect the evidence</h2><pre class="code-block">npm test        # crypto vectors + all six method engines + server
+npm run prove   # one-line verdict per method, printed side by side
+npm run check   # both
+npm start       # serve the lab on :3000</pre><p>The engines are plain ES modules — the same files the browser imports are the files the tests exercise.</p></section>
+
+  <section class="guide-section panel"><p class="eyebrow">Limits</p><h2>What this demo does not claim</h2><ul><li>Pure-JS SHA-256 is correct (tested against published vectors) but not constant-time hardware crypto — it is a teaching implementation.</li><li>The OAuth and mTLS labs model the message flow; no real TLS handshake or provider round-trip happens.</li><li>Real webhook systems sign more than <code>timestamp + body</code> (e.g. AWS SigV4 canonicalizes the whole request) — the lab covers the principle, not every scheme.</li><li>Verification logic is real; the secrets are fixtures. Never reuse them.</li></ul><p><a class="try" href="/">Return to Lab</a></p></section>
+</main>
+<!-- pb-shell --><a class="pb-shell" href="https://github.com/anhquanbd2021/api-authentication-methods" title="api-authentication-methods — an Article Playbook demo (view source)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2" fill="#2dd4bf"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#2dd4bf" opacity=".45"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#2dd4bf" opacity=".45"/><rect x="13" y="13" width="9" height="9" rx="4.5" fill="#2dd4bf"/></svg><b>api-authentication-methods</b><i>DEMO</i></a><!-- pb-shell --><!-- pb-back --><a class="pb-back" id="pb-back" href="https://github.com/anhquanbd2021/api-authentication-methods" title="Back to the article — api-authentication-methods">← Article <i>PLAYBOOK</i></a><script>(function(){var a=document.getElementById('pb-back');if(!a)return;var h=location.hostname;if(/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(h)){a.href='//'+h+':'+(/^(localhost|127\.0\.0\.1)$/.test(h)?'1234':'30082')+'/microsites/article.html?slug=api-authentication-methods';}})();</script><!-- pb-back --></body>
+</html>
